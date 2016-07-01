@@ -15,11 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.cassandra.tools.nodetool.stats;
+
+package org.apache.cassandra.tools.nodetool.printer;
 
 import java.io.PrintStream;
+import org.json.simple.JSONObject;
+import org.yaml.snakeyaml.Yaml;
 
-public interface StatsPrinter<T>
+abstract class AbstractPrinter
 {
-    void printFormat(T data, PrintStream out);
+    protected static class JsonPrinter implements IPrinter<IHolder>
+    {
+        @Override
+        public void print(IHolder data, PrintStream out)
+        {
+            JSONObject json = new JSONObject();
+            json.putAll(data.convert2Map());
+            out.println(json.toString());
+        }
+    }
+
+    protected static class YamlPrinter implements IPrinter<IHolder>
+    {
+        @Override
+        public void print(IHolder data, PrintStream out)
+        {
+            Yaml yaml = new Yaml();
+            out.println(yaml.dump(data.convert2Map()));
+        }
+    }
 }

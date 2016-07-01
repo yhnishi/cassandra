@@ -23,32 +23,34 @@ import java.util.Map;
 
 import com.google.common.collect.Multimap;
 
+import io.airlift.command.Option;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.cassandra.tools.NodeTool.NodeToolCmd;
+import org.apache.cassandra.tools.nodetool.printer.IPrinter;
+import org.apache.cassandra.tools.nodetool.printer.TpStatsHolder;
+import org.apache.cassandra.tools.nodetool.printer.TpStatsPrinter;
+
 
 @Command(name = "tpstats", description = "Print usage statistics of thread pools")
 public class TpStats extends NodeToolCmd
 {
+    @Option(title = "format",
+        name = {"-F", "--format"},
+        description = "Output format (json, yaml)")
+    private String outputFormat = "";
+
     @Override
     public void execute(NodeProbe probe)
     {
-        System.out.printf("%-25s%10s%10s%15s%10s%18s%n", "Pool Name", "Active", "Pending", "Completed", "Blocked", "All time blocked");
-
-
-        Multimap<String, String> threadPools = probe.getThreadPools();
-        for (Map.Entry<String, String> tpool : threadPools.entries())
+        if (!outputFormat.isEmpty() && !"json".equals(outputFormat) && !"yaml".equals(outputFormat))
         {
-            System.out.printf("%-25s%10s%10s%15s%10s%18s%n",
-                              tpool.getValue(),
-                              probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "ActiveTasks"),
-                              probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "PendingTasks"),
-                              probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "CompletedTasks"),
-                              probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "CurrentlyBlockedTasks"),
-                              probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "TotalBlockedTasks"));
+            throw new IllegalArgumentException("arguments for -F are json,yaml only.");
         }
 
-        System.out.printf("%n%-20s%10s%n", "Message type", "Dropped");
-        for (Map.Entry<String, Integer> entry : probe.getDroppedMessages().entrySet())
-            System.out.printf("%-20s%10s%n", entry.getKey(), entry.getValue());
+        TpStatsHolder data = new TpStatsHolder();
+        data.probe = probe;
+
+        IPrinter printer = TpStatsPrinter.from(outputFormat);
+        printer.print(data, System.out);
     }
 }

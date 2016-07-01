@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.tools.nodetool.stats;
+package org.apache.cassandra.tools.nodetool.printer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StatsTable
+public class TableStatsTable
 {
     public String name;
     public boolean isIndex;

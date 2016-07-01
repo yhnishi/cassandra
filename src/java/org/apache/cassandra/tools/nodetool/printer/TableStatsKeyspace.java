@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.tools.nodetool.stats;
+package org.apache.cassandra.tools.nodetool.printer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,9 @@ import org.apache.cassandra.db.ColumnFamilyStoreMBean;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.tools.NodeProbe;
 
-public class StatsKeyspace
+public class TableStatsKeyspace
 {
-    public List<StatsTable> tables = new ArrayList<>();
+    public List<TableStatsTable> tables = new ArrayList<>();
     private final NodeProbe probe;
 
     public String name;
@@ -37,7 +37,7 @@ public class StatsKeyspace
     private double totalReadTime;
     private double totalWriteTime;
 
-    public StatsKeyspace(NodeProbe probe, String keyspaceName)
+    public TableStatsKeyspace(NodeProbe probe, String keyspaceName)
     {
         this.probe = probe;
         this.name = keyspaceName;

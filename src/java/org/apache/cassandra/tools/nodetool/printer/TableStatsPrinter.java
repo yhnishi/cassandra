@@ -15,55 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.cassandra.tools.nodetool.stats;
+
+package org.apache.cassandra.tools.nodetool.printer;
 
 import java.io.PrintStream;
 import java.util.List;
 
-import org.json.simple.JSONObject;
-import org.yaml.snakeyaml.Yaml;
-
-public enum TableStatsPrinter
+public class TableStatsPrinter extends AbstractPrinter
 {
-    DEFAULT(new DefaultPrinter()),
-    JSON(new JsonPrinter()),
-    YAML(new YamlPrinter()),;
-
-    private final StatsPrinter<StatsHolder> printer;
-
-    TableStatsPrinter(StatsPrinter<StatsHolder> printer)
-    {
-        this.printer = printer;
-    }
-
-    public void print(StatsHolder stats, PrintStream out)
-    {
-        printer.printFormat(stats, out);
-    }
-
-    public static TableStatsPrinter from(String format)
+    public static IPrinter from(String format)
     {
         switch (format)
         {
             case "json":
-                return JSON;
+                return new JsonPrinter();
             case "yaml":
-                return YAML;
+                return new YamlPrinter();
             default:
-                return DEFAULT;
+                return new DefaultPrinter();
         }
     }
 
-    private static class DefaultPrinter implements StatsPrinter<StatsHolder>
+    private static class DefaultPrinter implements IPrinter<TableStatsHolder>
     {
         @Override
-        public void printFormat(StatsHolder data, PrintStream out)
+        public void print(TableStatsHolder data, PrintStream out)
         {
             out.println("Total number of tables: " + data.numberOfTables);
             out.println("----------------");
 
-            List<StatsKeyspace> keyspaces = data.keyspaces;
-            for (StatsKeyspace keyspace : keyspaces)
+            List<TableStatsKeyspace> keyspaces = data.keyspaces;
+            for (TableStatsKeyspace keyspace : keyspaces)
             {
                 // print each keyspace's information
                 out.println("Keyspace : " + keyspace.name);
@@ -74,8 +56,8 @@ public enum TableStatsPrinter
                 out.println("\tPending Flushes: " + keyspace.pendingFlushes);
 
                 // print each table's information
-                List<StatsTable> tables = keyspace.tables;
-                for (StatsTable table : tables)
+                List<TableStatsTable> tables = keyspace.tables;
+                for (TableStatsTable table : tables)
                 {
                     out.println("\t\tTable" + (table.isIndex ? " (index): " + table.name : ": ") + table.name);
                     if (table.isLeveledSstable)
@@ -128,26 +110,4 @@ public enum TableStatsPrinter
             }
         }
     }
-
-    private static class JsonPrinter implements StatsPrinter<StatsHolder>
-    {
-        @Override
-        public void printFormat(StatsHolder data, PrintStream out)
-        {
-            JSONObject json = new JSONObject();
-            json.putAll(data.convert2Map());
-            out.println(json.toString());
-        }
-    }
-
-    private static class YamlPrinter implements StatsPrinter<StatsHolder>
-    {
-        @Override
-        public void printFormat(StatsHolder data, PrintStream out)
-        {
-            Yaml yaml = new Yaml();
-            out.println(yaml.dump(data.convert2Map()));
-        }
-    }
-
 }

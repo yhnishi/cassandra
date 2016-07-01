@@ -30,10 +30,11 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.cassandra.tools.NodeTool.NodeToolCmd;
-import org.apache.cassandra.tools.nodetool.stats.StatsHolder;
-import org.apache.cassandra.tools.nodetool.stats.StatsKeyspace;
-import org.apache.cassandra.tools.nodetool.stats.StatsTable;
-import org.apache.cassandra.tools.nodetool.stats.TableStatsPrinter;
+import org.apache.cassandra.tools.nodetool.printer.IPrinter;
+import org.apache.cassandra.tools.nodetool.printer.TableStatsHolder;
+import org.apache.cassandra.tools.nodetool.printer.TableStatsKeyspace;
+import org.apache.cassandra.tools.nodetool.printer.TableStatsTable;
+import org.apache.cassandra.tools.nodetool.printer.TableStatsPrinter;
 
 @Command(name = "tablestats", description = "Print statistics on tables")
 public class TableStats extends NodeToolCmd
@@ -64,7 +65,7 @@ public class TableStats extends NodeToolCmd
 
         TableStats.OptionFilter filter = new OptionFilter(ignore, tableNames);
         ArrayListMultimap<String, ColumnFamilyStoreMBean> selectedTableMbeans = ArrayListMultimap.create();
-        Map<String, StatsKeyspace> keyspaceStats = new HashMap<>();
+        Map<String, TableStatsKeyspace> keyspaceStats = new HashMap<>();
 
         // get a list of table stores
         Iterator<Map.Entry<String, ColumnFamilyStoreMBean>> tableMBeans = probe.getColumnFamilyStoreMBeanProxies();
@@ -77,10 +78,10 @@ public class TableStats extends NodeToolCmd
 
             if (filter.isKeyspaceIncluded(keyspaceName))
             {
-                StatsKeyspace stats = keyspaceStats.get(keyspaceName);
+                TableStatsKeyspace stats = keyspaceStats.get(keyspaceName);
                 if (stats == null)
                 {
-                    stats = new StatsKeyspace(probe, keyspaceName);
+                    stats = new TableStatsKeyspace(probe, keyspaceName);
                     keyspaceStats.put(keyspaceName, stats);
                 }
                 stats.add(tableProxy);
@@ -95,18 +96,18 @@ public class TableStats extends NodeToolCmd
         filter.verifyTables();
 
         // get metrics of keyspace
-        StatsHolder holder = new StatsHolder(probe.getNumberOfTables());
+        TableStatsHolder holder = new TableStatsHolder(probe.getNumberOfTables());
         for (Map.Entry<String, Collection<ColumnFamilyStoreMBean>> entry : selectedTableMbeans.asMap().entrySet())
         {
             String keyspaceName = entry.getKey();
             Collection<ColumnFamilyStoreMBean> tables = entry.getValue();
-            StatsKeyspace statsKeyspace = keyspaceStats.get(keyspaceName);
+            TableStatsKeyspace statsKeyspace = keyspaceStats.get(keyspaceName);
 
             // get metrics of table statistics for this keyspace
             for (ColumnFamilyStoreMBean table : tables)
             {
                 String tableName = table.getTableName();
-                StatsTable statsTable = new StatsTable();
+                TableStatsTable statsTable = new TableStatsTable();
                 statsTable.name = tableName;
                 statsTable.isIndex = tableName.contains(".");
                 statsTable.sstableCount = probe.getColumnFamilyMetric(keyspaceName, tableName, "LiveSSTableCount");
@@ -227,7 +228,7 @@ public class TableStats extends NodeToolCmd
             holder.keyspaces.add(statsKeyspace);
         }
         // print out the keyspace and table statistics
-        TableStatsPrinter printer = TableStatsPrinter.from(outputFormat);
+        IPrinter printer = TableStatsPrinter.from(outputFormat);
         printer.print(holder, System.out);
     }
 

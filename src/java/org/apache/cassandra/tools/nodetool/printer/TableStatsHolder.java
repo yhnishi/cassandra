@@ -16,29 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.tools.nodetool.stats;
+package org.apache.cassandra.tools.nodetool.printer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StatsHolder
+public class TableStatsHolder implements IHolder
 {
-    public List<StatsKeyspace> keyspaces;
+    public List<TableStatsKeyspace> keyspaces;
     public final int numberOfTables;
 
-    public StatsHolder(int numberOfTables)
+    public TableStatsHolder(int numberOfTables)
     {
         keyspaces = new ArrayList<>();
         this.numberOfTables = numberOfTables;
     }
 
+    @Override
     public Map<String, Object> convert2Map()
     {
         HashMap<String, Object> mpRet = new HashMap<>();
         mpRet.put("total_number_of_tables", numberOfTables);
-        for (StatsKeyspace keyspace : keyspaces)
+        for (TableStatsKeyspace keyspace : keyspaces)
         {
             // store each keyspace's metrics to map
             HashMap<String, Object> mpKeyspace = new HashMap<>();
@@ -50,9 +51,9 @@ public class StatsHolder
             mpKeyspace.put("pending_flushes", keyspace.pendingFlushes);
 
             // store each table's metrics to map
-            List<StatsTable> tables = keyspace.tables;
+            List<TableStatsTable> tables = keyspace.tables;
             Map<String, Map<String, Object>> mpTables = new HashMap<>();
-            for (StatsTable table : tables)
+            for (TableStatsTable table : tables)
             {
                 Map<String, Object> mpTable = new HashMap<>();
 

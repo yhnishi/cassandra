@@ -30,7 +30,7 @@ import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.tools.NodeProbe;
 import org.apache.cassandra.tools.NodeTool.NodeToolCmd;
-import org.apache.cassandra.tools.nodetool.stats.StatsHolder;
+import org.apache.cassandra.tools.nodetool.stats.TableStatsHolder;
 import org.apache.cassandra.tools.nodetool.stats.StatsKeyspace;
 import org.apache.cassandra.tools.nodetool.stats.StatsTable;
 import org.apache.cassandra.tools.nodetool.stats.TableStatsPrinter;
@@ -95,7 +95,7 @@ public class TableStats extends NodeToolCmd
         filter.verifyTables();
 
         // get metrics of keyspace
-        StatsHolder holder = new StatsHolder(probe.getNumberOfTables());
+        TableStatsHolder holder = new TableStatsHolder(probe.getNumberOfTables());
         for (Map.Entry<String, Collection<ColumnFamilyStoreMBean>> entry : selectedTableMbeans.asMap().entrySet())
         {
             String keyspaceName = entry.getKey();
@@ -227,7 +227,7 @@ public class TableStats extends NodeToolCmd
             holder.keyspaces.add(statsKeyspace);
         }
         // print out the keyspace and table statistics
-        TableStatsPrinter printer = TableStatsPrinter.from(outputFormat);
+        org.apache.cassandra.tools.nodetool.stats.StatsPrinter printer = TableStatsPrinter.from(outputFormat);
         printer.print(holder, System.out);
     }
 

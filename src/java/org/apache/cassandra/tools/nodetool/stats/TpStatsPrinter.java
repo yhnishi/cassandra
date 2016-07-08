@@ -19,9 +19,8 @@
 package org.apache.cassandra.tools.nodetool.stats;
 
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
-
-import com.google.common.collect.Multimap;
 
 public class TpStatsPrinter
 {
@@ -44,23 +43,31 @@ public class TpStatsPrinter
         @Override
         public void print(TpStatsHolder data, PrintStream out)
         {
+            Map<String, Object> convertData = data.convert2Map();
+
             out.printf("%-25s%10s%10s%15s%10s%18s%n", "Pool Name", "Active", "Pending", "Completed", "Blocked", "All time blocked");
 
-            Multimap<String, String> threadPools = data.probe.getThreadPools();
-            for (Map.Entry<String, String> tpool : threadPools.entries())
+            Map<Object, Object> threadPools = convertData.get("ThreadPools") instanceof HashMap<?, ?> ? (HashMap)convertData.get("ThreadPools") : new HashMap();
+            for (Map.Entry<Object, Object> entry : threadPools.entrySet())
             {
+                HashMap values = entry.getValue() instanceof HashMap<?, ?> ? (HashMap)entry.getValue() : new HashMap();
                 out.printf("%-25s%10s%10s%15s%10s%18s%n",
-                           tpool.getValue(),
-                           data.probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "ActiveTasks"),
-                           data.probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "PendingTasks"),
-                           data.probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "CompletedTasks"),
-                           data.probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "CurrentlyBlockedTasks"),
-                           data.probe.getThreadPoolMetric(tpool.getKey(), tpool.getValue(), "TotalBlockedTasks"));
+                           entry.getKey(),
+                           values.get("ActiveTasks"),
+                           values.get("PendingTasks"),
+                           values.get("CompletedTasks"),
+                           values.get("CurrentlyBlockedTasks"),
+                           values.get("TotalBlockedTasks"),
+                           values.get("ActiveTasks"));
             }
 
             out.printf("%n%-20s%10s%n", "Message type", "Dropped");
-            for (Map.Entry<String, Integer> entry : data.probe.getDroppedMessages().entrySet())
+
+            Map<Object, Object> droppedMessages = convertData.get("DroppedMessage") instanceof HashMap<?, ?> ? (HashMap)convertData.get("DroppedMessage") : new HashMap();
+            for (Map.Entry<Object, Object> entry : droppedMessages.entrySet())
+            {
                 out.printf("%-20s%10s%n", entry.getKey(), entry.getValue());
+            }
         }
     }
 }
